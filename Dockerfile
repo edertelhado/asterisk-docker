@@ -1,0 +1,98 @@
+# Use a imagem oficial do Debian como base
+FROM debian:bookworm
+
+# Instale as dependências necessárias para compilar o Asterisk e o menuselect
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libncurses5-dev \
+    libssl-dev \
+    libxml2-dev \
+    libsqlite3-dev \
+    wget \
+    tar \
+    aptitude \
+    --no-install-recommends
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libncurses-dev libz-dev libssl-dev libxml2-dev libsqlite3-dev uuid-dev \
+    libcurl4-openssl-dev libspeex-dev libspeexdsp-dev libogg-dev libvorbis-dev \
+    libasound2-dev portaudio19-dev libpq-dev unixodbc-dev \
+    libneon27-dev libusb-dev liblua5.1-0-dev lua5.1 \
+    libgtk2.0-dev libbluetooth-dev freetds-dev libsnmp-dev libiksemel-dev libopus-dev libogg-dev \
+    libnewt-dev libpopt-dev libical-dev libspandsp-dev libjack-dev \
+    libsamplerate0-dev binutils-dev libsrtp2-dev libgsm1-dev libedit-dev \
+    doxygen libjansson-dev libldap-dev subversion git libxslt1-dev automake \
+    libncurses5-dev python3-dev libmariadb-dev libmariadb-dev-compat \
+    && rm -rf /var/lib/apt/lists/*
+
+
+# Defina a versão do Asterisk que você deseja instalar
+ENV ASTERISK_VERSION=20.7.0
+
+# Baixe, descompacte e compile o Asterisk
+RUN wget http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-${ASTERISK_VERSION}.tar.gz
+RUN tar -xzvf asterisk-${ASTERISK_VERSION}.tar.gz \
+    && rm asterisk-${ASTERISK_VERSION}.tar.gz \
+    && cd asterisk-${ASTERISK_VERSION} \
+    && ./configure --with-pjproject-bundled --with-jansson-bundled=yes --libdir=/usr/lib/x86_64-linux-gnu/ \
+    && make menuselect \
+    && TERM=xterm menuselect/menuselect \
+    --disable BUILD_NATIVE \
+    --disable-category MENUSELECT_CORE_SOUNDS \
+    --disable-category MENUSELECT_MOH \
+    --disable-category MENUSELECT_EXTRA_SOUNDS \
+    --disable-category MENUSELECT_UTILS \
+    --enable codec_opus --enable codec_ulaw --enable format_g723 --enable res_phoneprov  \
+    --enable codec_a_mu \
+    --enable codec_adpcm \
+    --enable codec_alaw \
+    --enable codec_codec2   \
+    --enable codec_dahdi \
+    --enable codec_g722 \
+    --enable codec_g726 \
+    --enable codec_gsm  \
+    --enable codec_ilbc \
+    --enable codec_lpc10 \
+    --enable codec_resample \
+    --enable codec_speex \
+    --enable codec_ulaw \
+    --enable codec_opus \
+    --enable codec_silk \
+    --enable codec_siren7   \
+    --enable codec_siren14  \
+    --enable codec_g729a \
+    --enable format_g719 \
+    --enable format_g723 \
+    --enable format_g726 \
+    --enable format_g729 \
+    --enable format_gsm \
+    --enable format_h263 \
+    --enable format_h264 \
+    --enable format_ilbc \
+    --enable format_ogg_vorbis   \
+    --enable format_pcm \
+    --enable format_siren14 \
+    --enable format_siren7  \
+    --enable format_sln \
+    --enable format_wav \
+    --enable format_wav_gsm \
+    && make \
+    && make install \
+    && make samples \
+    && make config \
+    && echo "/usr/lib" > /etc/ld.so.conf.d/asterisk.conf \
+    && ldconfig -v \
+    && find /usr -name "libasteriskssl.so*"
+
+COPY ./modules/*.so /usr/lib/x86_64-linux-gnu/asterisk/modules/
+RUN mkdir -p /var/lib/asterisk/documentation/thirdparty/
+COPY ./modules/*.xml /var/lib/asterisk/documentation/thirdparty/
+
+# Exponha a porta SIP padrão
+EXPOSE 5060/udp 5060/tcp 8088/tcp 8089/tcp
+
+# Defina o diretório de trabalho
+WORKDIR /etc/asterisk
+
+# Comando para iniciar o Asterisk quando o contêiner for executado
+CMD ["asterisk", "-f"]

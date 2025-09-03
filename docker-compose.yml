@@ -1,0 +1,7 @@
+services:
+  asterisk:
+    network_mode: "host"
+    build: .
+    container_name: asterisk
+    volumes:
+      - ./config:/etc/asterisk
