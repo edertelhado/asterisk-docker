@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libncurses-dev libz-dev libssl-dev libxml2-dev libsqlite3-dev uuid-dev \
     libcurl4-openssl-dev libspeex-dev libspeexdsp-dev libogg-dev libvorbis-dev \
-    libasound2-dev portaudio19-dev libpq-dev unixodbc-dev \
+    libasound2-dev portaudio19-dev libpq-dev unixodbc unixodbc-dev odbc-postgresql \
     libneon27-dev libusb-dev liblua5.1-0-dev lua5.1 \
     libgtk2.0-dev libbluetooth-dev freetds-dev libsnmp-dev libiksemel-dev libopus-dev libogg-dev \
     libnewt-dev libpopt-dev libical-dev libspandsp-dev libjack-dev \
@@ -36,47 +36,51 @@ RUN tar -xzvf asterisk-${ASTERISK_VERSION}.tar.gz \
     && cd asterisk-${ASTERISK_VERSION} \
     && ./configure --with-pjproject-bundled --with-jansson-bundled=yes --libdir=/usr/lib/x86_64-linux-gnu/ \
     && make menuselect \
-    && TERM=xterm menuselect/menuselect \
-    --disable BUILD_NATIVE \
-    --disable-category MENUSELECT_CORE_SOUNDS \
-    --disable-category MENUSELECT_MOH \
-    --disable-category MENUSELECT_EXTRA_SOUNDS \
-    --disable-category MENUSELECT_UTILS \
-    --enable codec_opus --enable codec_ulaw --enable format_g723 --enable res_phoneprov  \
-    --enable codec_a_mu \
-    --enable codec_adpcm \
-    --enable codec_alaw \
-    --enable codec_codec2   \
-    --enable codec_dahdi \
-    --enable codec_g722 \
-    --enable codec_g726 \
-    --enable codec_gsm  \
-    --enable codec_ilbc \
-    --enable codec_lpc10 \
-    --enable codec_resample \
-    --enable codec_speex \
-    --enable codec_ulaw \
-    --enable codec_opus \
-    --enable codec_silk \
-    --enable codec_siren7   \
-    --enable codec_siren14  \
-    --enable codec_g729a \
-    --enable format_g719 \
-    --enable format_g723 \
-    --enable format_g726 \
-    --enable format_g729 \
-    --enable format_gsm \
-    --enable format_h263 \
-    --enable format_h264 \
-    --enable format_ilbc \
-    --enable format_ogg_vorbis   \
-    --enable format_pcm \
-    --enable format_siren14 \
-    --enable format_siren7  \
-    --enable format_sln \
-    --enable format_wav \
-    --enable format_wav_gsm \
-    && make \
+    && make menuselect.makeopts \
+    \
+    # Habilita filas e CDR
+    && menuselect/menuselect --enable app_queue menuselect.makeopts \
+    && menuselect/menuselect --enable res_odbc menuselect.makeopts \
+    && menuselect/menuselect --enable res_config_odbc menuselect.makeopts \
+    && menuselect/menuselect --enable cdr_adaptive_odbc menuselect.makeopts \
+    \
+    # Habilita codecs
+    && menuselect/menuselect --enable codec_a_mu menuselect.makeopts \
+    && menuselect/menuselect --enable codec_speex menuselect.makeopts \
+    && menuselect/menuselect --enable codec_ulaw menuselect.makeopts \
+    && menuselect/menuselect --enable codec_opus menuselect.makeopts \
+    && menuselect/menuselect --enable codec_silk menuselect.makeopts \
+    && menuselect/menuselect --enable codec_siren7 menuselect.makeopts \
+    && menuselect/menuselect --enable codec_siren14 menuselect.makeopts \
+    && menuselect/menuselect --enable codec_g729a menuselect.makeopts \
+    \
+    # Habilita formatos
+    && menuselect/menuselect --enable format_g719 menuselect.makeopts \
+    && menuselect/menuselect --enable format_g723 menuselect.makeopts \
+    && menuselect/menuselect --enable format_g726 menuselect.makeopts \
+    && menuselect/menuselect --enable format_g729 menuselect.makeopts \
+    && menuselect/menuselect --enable format_gsm menuselect.makeopts \
+    && menuselect/menuselect --enable format_h263 menuselect.makeopts \
+    && menuselect/menuselect --enable format_h264 menuselect.makeopts \
+    && menuselect/menuselect --enable format_ilbc menuselect.makeopts \
+    && menuselect/menuselect --enable format_ogg_vorbis menuselect.makeopts \
+    && menuselect/menuselect --enable format_pcm menuselect.makeopts \
+    && menuselect/menuselect --enable format_siren14 menuselect.makeopts \
+    && menuselect/menuselect --enable format_siren7 menuselect.makeopts \
+    && menuselect/menuselect --enable format_sln menuselect.makeopts \
+    && menuselect/menuselect --enable format_wav menuselect.makeopts \
+    && menuselect/menuselect --enable format_wav_gsm menuselect.makeopts \
+
+    \
+    #Desabilita coisas
+    && menuselect/menuselect --disable BUILD_NATIVE menuselect.makeopts \
+    && menuselect/menuselect --disable-category MENUSELECT_CORE_SOUNDS menuselect.makeopts \
+    && menuselect/menuselect --disable-category MENUSELECT_MOH menuselect.makeopts \
+    && menuselect/menuselect --disable-category MENUSELECT_EXTRA_SOUNDS menuselect.makeopts \
+    && menuselect/menuselect --disable-category MENUSELECT_UTILS menuselect.makeopts \
+    \
+    # Compile e instale
+    && make -j$(nproc) \
     && make install \
     && make samples \
     && make config \

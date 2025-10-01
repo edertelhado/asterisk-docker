@@ -5,3 +5,5 @@ services:
     container_name: asterisk
     volumes:
       - ./config:/etc/asterisk
+      - ./etc/odbc.ini:/etc/odbc.ini
+      - ./etc/odbcinst.ini:/etc/odbcinst.ini  
