@@ -75,9 +75,7 @@ RUN tar -xzvf asterisk-${ASTERISK_VERSION}.tar.gz \
     #Desabilita coisas
     && menuselect/menuselect --disable BUILD_NATIVE menuselect.makeopts \
     && menuselect/menuselect --disable-category MENUSELECT_CORE_SOUNDS menuselect.makeopts \
-    && menuselect/menuselect --disable-category MENUSELECT_MOH menuselect.makeopts \
     && menuselect/menuselect --disable-category MENUSELECT_EXTRA_SOUNDS menuselect.makeopts \
-    && menuselect/menuselect --disable-category MENUSELECT_UTILS menuselect.makeopts \
     \
     # Compile e instale
     && make -j$(nproc) \
