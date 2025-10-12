@@ -90,11 +90,24 @@ COPY ./modules/*.so /usr/lib/x86_64-linux-gnu/asterisk/modules/
 RUN mkdir -p /var/lib/asterisk/documentation/thirdparty/
 COPY ./modules/*.xml /var/lib/asterisk/documentation/thirdparty/
 
-# Exponha a porta SIP padrão
-EXPOSE 5060/udp 5060/tcp 8088/tcp 8089/tcp
 
+RUN apt-get update && apt-get install -y tzdata
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timez
+
+# Exponha a porta SIP padrão
+# EXPOSE 5060/udp 5060/tcp 8088/tcp 8089/tcp
+EXPOSE 4569/udp \    
+       5038/tcp \    
+       5039/tcp \    
+       5060/udp \    
+       5060/tcp \    
+       5061/tcp \    
+       8088/tcp \    
+       8089/tcp \    
+       10000-20000/udp
 # Defina o diretório de trabalho
 WORKDIR /etc/asterisk
 
 # Comando para iniciar o Asterisk quando o contêiner for executado
-CMD ["asterisk", "-f"]
+CMD ["asterisk", "-fvvvv"]
