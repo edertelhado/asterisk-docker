@@ -37,7 +37,6 @@ RUN tar -xzvf asterisk-${ASTERISK_VERSION}.tar.gz \
     && ./configure --with-pjproject-bundled --with-jansson-bundled=yes --libdir=/usr/lib/x86_64-linux-gnu/ \
     && make menuselect \
     && make menuselect.makeopts \
-    \
     # Habilita filas e CDR
     && menuselect/menuselect --enable app_queue menuselect.makeopts \
     && menuselect/menuselect --enable res_odbc menuselect.makeopts \
